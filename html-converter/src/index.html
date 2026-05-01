@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>퍼블리싱 가이드 & TS 변환기</title>
+    <link rel="stylesheet" href="guide.css" />
+    <style>
+      .converter-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .output-area {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .code-textarea {
+        width: 100%;
+        height: 180px;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        font-family: monospace;
+        background: #f9f9f9;
+      }
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #2d3748;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 10px 10px 0 0;
+        font-size: 12px;
+      }
+      .btn-convert {
+        background: #6366f1;
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="guide-container">
+      <div class="guide-header">
+        <h1>Component Converter (TS)</h1>
+        <a href="index.html" class="btn-guide">작업리스트 보기</a>
+      </div>
+
+      <div class="section">
+        <h3>HTML Input</h3>
+        <textarea
+          id="htmlInput"
+          class="code-textarea"
+          placeholder="HTML을 입력하세요..."
+        >
+<button type="button" class="btn btn-primary btn-md">확인</button></textarea
+        >
+        <button class="btn-convert" onclick="processConvert()">
+          TS 프레임워크 소스로 변환
+        </button>
+      </div>
+
+      <div class="converter-wrap">
+        <!-- React TS -->
+        <div class="output-area">
+          <div class="output-box">
+            <div class="output-header">
+              <span>React + TypeScript (TSX)</span
+              ><button class="btn-copy" onclick="copyCode('reactOutput')">
+                Copy
+              </button>
+            </div>
+            <pre id="reactOutput" class="code-block">대기 중...</pre>
+          </div>
+        </div>
+        <!-- Vue TS -->
+        <div class="output-area">
+          <div class="output-box">
+            <div class="output-header">
+              <span>Vue 3 + TypeScript (SFC)</span
+              ><button class="btn-copy" onclick="copyCode('vueOutput')">
+                Copy
+              </button>
+            </div>
+            <pre id="vueOutput" class="code-block">대기 중...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function processConvert() {
+        const html = document.getElementById("htmlInput").value.trim();
+        if (!html) return;
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const el = doc.body.firstElementChild;
+        if (!el) return;
+
+        const tagName = el.tagName.toLowerCase();
+        const content = el.innerHTML.trim();
+
+        // React TSX 변환 (Interface 추가)
+        const reactTsx = `
+import React, { ReactNode, ButtonHTMLAttributes } from 'react';
+
+interface CustomProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  children?: ReactNode;
+}
+
+const CustomComponent: React.FC<CustomProps> = ({ 
+  variant = 'primary', 
+  size = 'md', 
+  children,
+  className,
+  ...props 
+}) => {
+  return (
+    <${tagName} 
+      {...props}
+      className={\`btn btn-\${variant} btn-\${size} \${className || ''}\`}
+    >
+      {children || '${content}'}
+    </${tagName}>
+  );
+};
+
+export default CustomComponent;`;
+
+        // Vue TS 변환 (defineProps 타입 정의 추가)
+        const vueTs = `
+<template>
+  <${tagName}
+    v-bind="$attrs"
+    :class="['btn', \`btn-\${variant}\`, \`btn-\${size}\`]"
+  >
+    <slot>${content}</slot>
+  </${tagName}>
+</template>
+
+<script setup lang="ts">
+interface Props {
+  variant?: 'primary' | 'secondary' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+withDefaults(defineProps<Props>(), {
+  variant: 'primary',
+  size: 'md'
+});
+<\/script>`;
+
+        document.getElementById("reactOutput").innerText = reactTsx.trim();
+        document.getElementById("vueOutput").innerText = vueTs.trim();
+      }
+
+      function copyCode(id) {
+        navigator.clipboard.writeText(document.getElementById(id).innerText);
+        alert("복사되었습니다.");
+      }
+
+      window.onload = processConvert;
+    </script>
+  </body>
+</html>

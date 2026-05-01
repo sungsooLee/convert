@@ -1,0 +1,16 @@
+{
+  "name": "html-to-framework",
+  "version": "1.0.0",
+  "description": "HTML 컴포넌트를 React/Vue로 변환",
+  "main": "index.js",
+  "scripts": {
+    "gen": "node index.js",
+    "dev": "live-server . --port=8000"
+  },
+  "dependencies": {
+    "node-html-parser": "^6.1.13"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
